@@ -13,12 +13,7 @@ export default class Client extends EventEmitter {
         this.attachListeners(); 
     }
 
-    private async onStart(message: Message) {
-        this.emit('onStart', message);
-    }
-
     private attachListeners() {
-        this.bot.onText(/\/start/, this.onStart.bind(this));
         this.bot.on('message', this.onMessage.bind(this));
         this.bot.on('poll_answer', this.onPollAnswer.bind(this));
     }

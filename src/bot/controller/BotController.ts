@@ -4,10 +4,13 @@ import { Message, TPollAnswer } from "../Types";
 import { BotTokenNotFound } from "../../error/BotTokenNotFoundError";
 import ParsingController from "../../parser/controller/ParsingController";
 import AbstractParser from "../../parser/AbstractParser";
+import { Database } from "../../database/Database";
+import { TTableUserData } from "../../database/TableTypes";
 
 export default class BotController {
     private client: Client;
     private parsingController: AbstractParser;
+    private database: Database;
     private token: string | undefined;
     private polls: Message[] = [];
 
@@ -21,29 +24,40 @@ export default class BotController {
             throw BotTokenNotFound;
         }
         this.client = new Client(this.token);
+        this.database = new Database();
         this.attachListeners(); 
     }
 
     private attachListeners() {
         this.client.on('messageReceived', this.onMessageReceived.bind(this));
         this.client.on('pollVoted', this.onPollVoted.bind(this));
-        this.client.on('onStart', this.onStart.bind(this));
     }
 
-    private onStart(msg: Message) {
+    private async onStart(msg: Message) {
         const firstName = msg?.from?.first_name ?? "";
         this.client.sendStartMessage(msg.chat.id, firstName);
     }
 
+    private async addUser(msg: Message) {
+        if (msg.from) {
+            const data: TTableUserData = {
+                telegram_id: msg.from.id,
+                username: msg.from.username || "",
+                first_name: msg.from.first_name || "",
+                last_name: msg.from.last_name || "",
+                is_bot: msg.from.is_bot
+            }
+            await this.database.addUser(data);
+        }
+    }
+
     private async onMessageReceived(msg: Message) {
         console.log('MSGGG', msg);
+        await this.addUser(msg);
         const chatId = msg.chat.id;
         const text = msg.text || '';
         const linksExpressions = ['http://', 'https://'];
         const isItLink = linksExpressions.map(expr => text.includes(expr)).filter(check => check).length > 0;
-        if (text === '/start') {
-            return;
-        } 
         if (isItLink) {
             const parsingController = new ParsingController();
             const link = text;
@@ -80,7 +94,11 @@ export default class BotController {
                 });
             }
         } else {
-            this.client.sendNoLinkMessage(chatId);
+            if (msg.text === '/start') {
+                this.onStart(msg);
+            } else {
+                this.client.sendNoLinkMessage(chatId);
+            }
         }
     }
 
