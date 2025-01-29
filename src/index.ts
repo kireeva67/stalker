@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-import BotController from "./bot/controller/BotController";
-dotenv.config();
+import Main from "./Main";
 console.log("Hello, TypeScript in Node.js!");
 
-new BotController();
+new Main();
