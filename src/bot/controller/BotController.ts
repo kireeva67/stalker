@@ -5,7 +5,7 @@ import { BotTokenNotFound } from "../../error/BotTokenNotFoundError";
 import ParsingController from "../../parser/controller/ParsingController";
 import AbstractParser from "../../parser/AbstractParser";
 import { Database } from "../../database/Database";
-import { TTableUserData } from "../../database/TableTypes";
+import { TTableLinkData, TTableUserData } from "../../database/TableTypes";
 
 export default class BotController {
     private client: Client;
@@ -18,13 +18,14 @@ export default class BotController {
         this.init();
     }
 
-    private init() {
+    private async init() {
         this.token = process.env.TELEGRAM_BOT_TOKEN;    
         if (!this.token) {
             throw BotTokenNotFound;
         }
         this.client = new Client(this.token);
         this.database = new Database();
+        console.log("ALLL USERS", await this.database.getAllUsers());
         this.attachListeners(); 
     }
 
@@ -48,6 +49,16 @@ export default class BotController {
                 is_bot: msg.from.is_bot
             }
             await this.database.addUser(data);
+        }
+    }
+
+    private async addLink(msg: Message, sizeMap: Map<string, boolean>) {
+        if (msg.from && msg.text) {
+            const data: TTableLinkData = {
+                url: msg.text,
+                available_params: sizeMap,
+            }
+            await this.database.addLink(data, msg.from.id);
         }
     }
 
@@ -83,8 +94,9 @@ export default class BotController {
                 //     console.log(option);
                 //     this.client.sendPoll(chatId, option);
                 // });
-              
+                const sizeMap = parsingController.getAllSizesMap();
                 const sizeNames = parsingController.getSizesNames();
+                this.addLink(msg, sizeMap);
                 const sizeOptions = this.splitOptionsIntoPolls(sizeNames);
                  sizeOptions.map(async option => {
                     console.log(option);
@@ -101,7 +113,6 @@ export default class BotController {
             }
         }
     }
-
 
     private splitOptionsIntoPolls(options: string[]) {
         const max = this.client.getMaxOptions();
@@ -127,8 +138,7 @@ export default class BotController {
             choosenOptionIds.forEach(id => {
                 const choosenSize = pollOptions[id].text;
                 const sizesMap = this.parsingController.getAllSizesMap();
-                const size = sizesMap.find(option => option.size === choosenSize);
-                if (size && size.available) {
+                if (sizesMap.has(choosenSize) && sizesMap.get(choosenSize)) {
                     willNotStalkering.push(choosenSize);
                 } else {
                     this.client.sendItemAddedToStalkerList(poll.chat.id, choosenSize);

@@ -1,9 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
 import { ValidationError } from '../error/ValidationError';
-import { TSizeOption } from '../bot/Types';
 
 export default class AbstractParser {
-    sizesMap: TSizeOption[] = [];
+    sizesMap: Map<string, boolean> = new Map();
     colorsMap = new Map();
     data: any;
     link: string = '';
@@ -37,7 +36,11 @@ export default class AbstractParser {
     };
 
     public getAllSizesNames(): string[] {
-        return this.sizesMap.map(size => size.size);
+        const sizes = [];
+        for (const size of this.sizesMap.keys()) {
+            sizes.push(size);
+        }
+        return sizes;
     }
 
     public getAllColorNames(): string[] {
@@ -53,7 +56,7 @@ export default class AbstractParser {
         return this.colorsMap;
     }
 
-    public getAllSizesMap(): TSizeOption[] {
+    public getAllSizesMap(): Map<string, boolean> {
         return this.sizesMap;
     }
 }

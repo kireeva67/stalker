@@ -57,4 +57,8 @@ export default class ParsingController {
                 break;
         }
     }
+
+    public getAllSizesMap() {
+        return this.parser.getAllSizesMap();
+    }
 }

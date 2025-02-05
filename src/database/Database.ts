@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { DataBaseURLIsNotSetError } from '../error/DataBaseURLIsNotSetError';
-import { TTableUserData } from './TableTypes';
+import { TTableLinkData, TTableUserData } from './TableTypes';
 
 export class Database {
     private prisma;
@@ -14,13 +14,53 @@ export class Database {
         this.prisma = new PrismaClient();
     }
 
+    public async getAllUsers() {
+       return await this.prisma.user.findMany()
+    }
+
     public async addUser(data: TTableUserData) {
         const doesUserExsist = await this.doesUserExsist(data.telegram_id);
         console.log("USER EXSIST??", doesUserExsist);  
         if (!doesUserExsist) {
             await this.prisma.user.create({ data });
-            console.log("ALLL USERS", await this.prisma.user.findMany());
+            console.log("ALLL USERS", await this.getAllUsers());
         }
+    }
+
+    public async addLink(data: TTableLinkData, userId: number) {
+        const doesUserHasLink = await this.doesUserHasLink(userId, data?.url);
+        console.log("USER HAS LINK?", doesUserHasLink);  
+        if (!doesUserHasLink) {
+            await this.prisma.links.create({
+                data: {
+                    url: data.url,
+                    available_params: Object.fromEntries(data.available_params),
+                    user: {
+                    connect: { telegram_id: userId }
+                    },
+                },
+            });
+            console.log("ALL LINKS", await this.prisma.links.findMany());
+        }
+    }
+
+    protected async doesUserHasLink(userId: number, url: string) {
+        const user = await this.getUser(userId);
+        const links = await this.prisma.links.findMany({
+            where: {
+                user_id: user?.id,
+                url: url
+            }
+        });
+        return links.length > 0;
+    }
+
+    public async getUser(id: number) {
+        return await this.prisma.user.findUnique({
+            where: {
+                telegram_id: id,
+            },
+        });
     }
 
     protected async doesUserExsist(id: number) {

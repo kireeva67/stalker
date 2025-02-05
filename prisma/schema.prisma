@@ -15,20 +15,20 @@ datasource db {
 
 model User {
   id    Int     @id @default(autoincrement())
-  telegram_id  Int 
+  telegram_id  Int @unique
   username String
   is_bot Boolean
   last_name String?
   first_name String?
-  links Links?
+  links Links[]
 }
 
 model Links {
   id Int @id @default(autoincrement())
   url String
   available_params Json
-  selected_params Json
-  is_active Boolean
-  user_id Int @unique 
+  selected_params Json?
+  is_active Boolean @default(false)
+  user_id Int
   user User @relation(fields: [user_id], references: [id])
 }

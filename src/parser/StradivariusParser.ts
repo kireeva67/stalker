@@ -40,8 +40,9 @@ export default class StradivariusParser extends AbstractParser {
         dataArray.push(data);
       }
     });
-    const sizesMap = dataArray.map((data) => {
-      return { size: data.name, available: data.visibilityValue === "SHOW" };
+    const sizesMap: Map<string, boolean> = new Map();
+    dataArray.forEach((data) => {
+      sizesMap.set(data.name, data.visibilityValue === "SHOW");
     });
     this.sizesMap = sizesMap;
     console.log("getAllSizes", sizesMap);

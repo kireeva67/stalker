@@ -5,17 +5,19 @@ const { JSDOM } = jsdom;
 
 export default class MangoParser extends AbstractParser {
 
-    public getAllSizesMap(): TSizeOption[] {
+    public getAllSizesMap(): Map<string, boolean> {
         const notAvailableClassName = "SizeItemContent_notAvailable__ra6rw";
         const dom = new JSDOM(this.data);
         const elementsCollection = dom.window.document.getElementsByClassName("SizeItemContent_sizeInfo__v8gzJ");
-        let sizesMap: TSizeOption[] = [];
+        const sizesMap: Map<string, boolean> = new Map();
         if (elementsCollection.length) {
             const elementsArray = Array.from(elementsCollection);
-            sizesMap = elementsArray.map((element) => {
+            elementsArray.forEach((element) => {
                 const classList = Array.from(element.classList);
                 const available = !classList.includes(notAvailableClassName);
-                return <TSizeOption>{size: element.textContent, available};
+                if (element.textContent) {
+                    sizesMap.set(element.textContent, available);
+                }
             });  
         }
         this.sizesMap = sizesMap;
