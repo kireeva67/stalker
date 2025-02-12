@@ -29,18 +29,18 @@ export class Database {
 
     public async addLink(data: TTableLinkData, userId: number) {
         const doesUserHasLink = await this.doesUserHasLink(userId, data?.url);
-        console.log("USER HAS LINK?", doesUserHasLink);  
+        console.log("USER HAS LINK?", doesUserHasLink, data);  
         if (!doesUserHasLink) {
-            await this.prisma.links.create({
+            const link = await this.prisma.links.create({
                 data: {
                     url: data.url,
-                    available_params: Object.fromEntries(data.available_params),
+                    available_params: data.available_params,
                     user: {
                     connect: { telegram_id: userId }
                     },
                 },
             });
-            console.log("ALL LINKS", await this.prisma.links.findMany());
+            console.log("ALL LINKS", await this.prisma.links.findMany(), link?.available_params);
         }
     }
 

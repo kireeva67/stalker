@@ -1,3 +1,5 @@
+import { TSizeOption } from "../bot/Types"
+
 export type TTableUserData = {
     id?: number
     telegram_id: number
@@ -10,7 +12,7 @@ export type TTableUserData = {
 
 export type TTableLinkData = {
     url: string
-    available_params: Map<string, boolean>
-    selected_params?: Map<string, boolean>
+    available_params: TSizeOption[]
+    selected_params?: TSizeOption[]
     is_active?: boolean
 }

@@ -1,11 +1,11 @@
 import Client from "../Client";
 import { ValidationError } from "../../error/ValidationError";
-import { Message, TPollAnswer } from "../Types";
+import { Message, TPollAnswer, TSizeOption } from "../Types";
 import { BotTokenNotFound } from "../../error/BotTokenNotFoundError";
-import ParsingController from "../../parser/controller/ParsingController";
-import AbstractParser from "../../parser/AbstractParser";
 import { Database } from "../../database/Database";
 import { TTableLinkData, TTableUserData } from "../../database/TableTypes";
+import AbstractParser from "../../parser/AbstractParser";
+import ParsingController from "../../parser/controller/ParsingController";
 
 export default class BotController {
     private client: Client;
@@ -52,7 +52,7 @@ export default class BotController {
         }
     }
 
-    private async addLink(msg: Message, sizeMap: Map<string, boolean>) {
+    private async addLink(msg: Message, sizeMap: TSizeOption[]) {
         if (msg.from && msg.text) {
             const data: TTableLinkData = {
                 url: msg.text,
@@ -94,16 +94,28 @@ export default class BotController {
                 //     console.log(option);
                 //     this.client.sendPoll(chatId, option);
                 // });
-                const sizeMap = parsingController.getAllSizesMap();
                 const sizeNames = parsingController.getSizesNames();
-                this.addLink(msg, sizeMap);
+                
                 const sizeOptions = this.splitOptionsIntoPolls(sizeNames);
-                 sizeOptions.map(async option => {
-                    console.log(option);
-                    const poll = await this.client.sendPoll(chatId, option);
-                    console.log('rrr', poll);
+                console.log("SIZE OPTIONSS", sizeOptions);
+                
+                const sizeMap = parsingController.getAllSizesMap();
+                await Promise.all(sizeOptions.map(async (options) => {
+                    console.log(options);
+                    const poll = await this.client.sendPoll(chatId, options);
+                    options.forEach(size => {
+                        sizeMap.map((option: { size: string; }, id: number) => {
+                            if (option.size === size) {
+                                sizeMap[id].pollId = poll.poll?.id;
+                            }
+                        });
+                    });
                     this.polls.push(poll);
-                });
+                }));
+                
+                console.log("TTTTT", sizeMap);
+                
+                this.addLink(msg, sizeMap);
             }
         } else {
             if (msg.text === '/start') {
@@ -129,18 +141,24 @@ export default class BotController {
         return polls;
     }
 
-    private onPollVoted(pollAnswer: TPollAnswer) {
+    private async onPollVoted(pollAnswer: TPollAnswer) {
         const poll = this.polls.find(el => el.poll?.id === pollAnswer.poll_id);
+        console.log("POLLLL ANSW", poll, this.polls, pollAnswer.poll_id);
+        
         if (poll) {
             const pollOptions = poll.poll?.options ?? [];
             const choosenOptionIds = pollAnswer.option_ids;
             const willNotStalkering: string[] = [];
+            console.log("POLLLL ANSW", poll);
+            
             choosenOptionIds.forEach(id => {
-                const choosenSize = pollOptions[id].text;
                 const sizesMap = this.parsingController.getAllSizesMap();
-                if (sizesMap.has(choosenSize) && sizesMap.get(choosenSize)) {
+                const choosenSize = pollOptions[id].text;
+                const size = sizesMap.find((option: { size: string; }) => option.size === choosenSize);
+                if (size && size.available) {
                     willNotStalkering.push(choosenSize);
                 } else {
+                    // this.database.addChoosenOption(pollAnswer.user.id, poll.chat.id, choosenSize);
                     this.client.sendItemAddedToStalkerList(poll.chat.id, choosenSize);
                 }
             });

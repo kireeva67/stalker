@@ -3,7 +3,7 @@ import EventEmitter from "events";
 import { Message, TPollAnswer } from './Types';
 
 export default class Client extends EventEmitter {
-    private bot;
+    public bot;
     private maxOptions = 10;
     private minOptions = 2;
 

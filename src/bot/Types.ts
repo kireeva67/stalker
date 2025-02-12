@@ -43,7 +43,11 @@ export type TPoll = {
     allows_multiple_answers: boolean;
 }
 
-export type TSizeOption = { [key: string]: boolean };
+export type TSizeOption = { 
+    size: string,
+    available: boolean,
+    pollId?: string
+ };
 
 export type Message = {
     message_id: number;               
