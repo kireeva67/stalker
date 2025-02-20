@@ -1,0 +1,7 @@
+-- CreateTable
+CREATE TABLE "Polls" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "poll_id" TEXT NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    CONSTRAINT "Polls_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);

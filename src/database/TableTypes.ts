@@ -16,3 +16,10 @@ export type TTableLinkData = {
     selected_params?: TSizeOption[]
     is_active?: boolean
 }
+
+export type TTablePollData = {
+    poll_id: string,
+    chat_id: number,
+    options: string[],
+    url: string
+}

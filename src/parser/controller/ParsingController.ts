@@ -3,7 +3,7 @@ import MangoParser from "../MangoParser";
 import PullAndBearParser from "../PullAndBearParser";
 import StradivariusParser from "../StradivariusParser";
 
-enum Parsers {
+export enum Parsers {
     MANGO = 'shop.mango.com',
     PULLANDBEAR = 'www.pullandbear.com',
     ZARA = 'www.zara.com',
@@ -54,7 +54,6 @@ export default class ParsingController {
                 return new StradivariusParser();
             default:
                 return new AbstractParser();
-                break;
         }
     }
 

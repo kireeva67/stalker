@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { DataBaseURLIsNotSetError } from '../error/DataBaseURLIsNotSetError';
-import { TTableLinkData, TTableUserData } from './TableTypes';
+import { TTableLinkData, TTablePollData, TTableUserData } from './TableTypes';
 
 export class Database {
     private prisma;
@@ -18,6 +18,10 @@ export class Database {
        return await this.prisma.user.findMany()
     }
 
+    public async getAllPolls() {
+        return await this.prisma.polls.findMany()
+     }
+
     public async addUser(data: TTableUserData) {
         const doesUserExsist = await this.doesUserExsist(data.telegram_id);
         console.log("USER EXSIST??", doesUserExsist);  
@@ -28,31 +32,98 @@ export class Database {
     }
 
     public async addLink(data: TTableLinkData, userId: number) {
-        const doesUserHasLink = await this.doesUserHasLink(userId, data?.url);
-        console.log("USER HAS LINK?", doesUserHasLink, data);  
-        if (!doesUserHasLink) {
+        const links = await this.doesUserHasLink(userId, data?.url);
+        if (links) {
+            const isNewLink = links.length > 0;
+            console.log("USER HAS LINK?", isNewLink, data);  
+            
+            await Promise.all(links.map(async (link: any) => {
+                const updatedLink = await this.prisma.links.update({
+                    where: {
+                        id: link.id
+                    },
+                    data: { is_active: false }
+                });
+                console.log('LINK IS NOT ACTIVE ANYMORE', updatedLink);
+            }));
+
             const link = await this.prisma.links.create({
                 data: {
                     url: data.url,
                     available_params: data.available_params,
+                    is_active: true,
                     user: {
                     connect: { telegram_id: userId }
                     },
                 },
             });
-            console.log("ALL LINKS", await this.prisma.links.findMany(), link?.available_params);
         }
+    }
+
+    public async addPoll(data: TTablePollData, userId: number) {
+        const poll = await this.prisma.polls.create({
+            data: {
+                poll_id: data.poll_id,
+                chat_id: data.chat_id,
+                options: data.options,
+                url: data.url,
+                user: {
+                connect: { telegram_id: userId }
+                },
+            },
+        });
+        console.log("ALL POLLS", await this.prisma.polls.findMany());
+    }
+
+    public async getPoll(userId: number, pollId: string) {
+        console.log('POLLLSSS0000', await this.prisma.polls.findMany());
+        const user = await this.getUser(userId);
+        if (user?.id) {
+            const polls = await this.prisma.polls.findMany({
+                where: {
+                    user_id: user?.id,
+                    poll_id: pollId
+                }
+            });
+            console.log('POLLLSSS', polls);
+            return polls[0];
+        }
+        return null;
+    }
+
+    public async addChoosenOptions(pollId: string, userId: number, url: string, options: string[]) {
+        //TODO find link where available_params keep same pollId!!!
+        const link = await this.prisma.links.findFirst({
+            where: {
+                url: url,
+                is_active: true
+            }
+        });
+        console.log('AAAAAAAAAAAAAAAAAAA', link);
+       
+        if (link && link.available_params) {
+            console.log('addChoosenOptions', link, pollId, link.is_active, options);
+            const updatedLink = await this.prisma.links.update({
+                where: {
+                    id: link.id
+                },
+                data: { selected_params:  options }
+            });
+            console.log('ADDED OPTIONS', updatedLink);
+        }        
     }
 
     protected async doesUserHasLink(userId: number, url: string) {
         const user = await this.getUser(userId);
-        const links = await this.prisma.links.findMany({
-            where: {
-                user_id: user?.id,
-                url: url
-            }
-        });
-        return links.length > 0;
+        if (user?.id) {
+            const links = await this.prisma.links.findMany({
+                where: {
+                    user_id: user?.id,
+                    url: url
+                }
+            });
+            return links;
+        }
     }
 
     public async getUser(id: number) {

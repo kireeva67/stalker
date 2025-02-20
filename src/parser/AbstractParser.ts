@@ -1,13 +1,14 @@
 import axios, { AxiosResponse } from 'axios';
 import { ValidationError } from '../error/ValidationError';
 import { TSizeOption } from '../bot/Types';
+import { Parsers } from './controller/ParsingController';
 
 export default class AbstractParser {
-    sizesMap: TSizeOption[] = [];
-    colorsMap = new Map();
-    data: any;
-    link: string = '';
-    userAgent: string;
+    protected sizesMap: TSizeOption[] = [];
+    protected colorsMap = new Map();
+    protected data: any;
+    protected link: string = '';
+    protected userAgent: string;
 
     constructor() {
         this.userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1";
