@@ -30,6 +30,7 @@ model Links {
   available_params Json
   selected_params Json?
   is_active Boolean @default(false)
+  chat_id Int @default(0)
   user_id Int
   user User @relation(fields: [user_id], references: [id])
 }

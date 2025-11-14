@@ -4,30 +4,27 @@ import { Message, TPollAnswer, TSizeOption } from "../Types";
 import { BotTokenNotFound } from "../../error/BotTokenNotFoundError";
 import { Database } from "../../database/Database";
 import { TTableLinkData, TTablePollData, TTableUserData } from "../../database/TableTypes";
-import AbstractParser from "../../parser/AbstractParser";
 import ParsingController from "../../parser/controller/ParsingController";
+import { container, singleton } from "tsyringe";
 
+@singleton()
 export default class BotController {
     private client: Client;
     private parsingController: ParsingController;
-    private parser: AbstractParser;
     private database: Database;
-    private token: string | undefined;
+    // private token: string | undefined;
 
     constructor() {
         this.init();
     }
 
     private async init() {
-        this.token = process.env.TELEGRAM_BOT_TOKEN;    
-        if (!this.token) {
-            throw BotTokenNotFound;
-        }
-        this.client = new Client(this.token);
-        this.database = new Database();
-        this.parsingController = new ParsingController();
-        console.log("ALLL USERS", await this.database.getAllUsers());
-        console.log("ALLL POLLS", await this.database.getAllPolls());
+        this.client = container.resolve(Client);
+        this.database = container.resolve(Database);
+        this.parsingController = container.resolve(ParsingController);
+        console.log('RRR CLIENT INIT', this);
+        // console.log("ALLL USERS", await this.database.getAllUsers());
+        // console.log("ALLL POLLS", await this.database.getAllPolls());
         this.attachListeners(); 
     }
 
@@ -59,6 +56,7 @@ export default class BotController {
             const data: TTableLinkData = {
                 url: msg.text,
                 available_params: sizeMap,
+                chat_id: msg.chat.id
             }
             await this.database.addLink(data, msg.from.id);
         }
@@ -87,29 +85,7 @@ export default class BotController {
             const response = await this.getResponse(text, chatId);
             if (response) {
                 this.client.sendApproveMessage(chatId);
-                const sizeNames = this.parsingController.getSizesNames();
-                const sizeOptions = this.splitOptionsIntoPolls(sizeNames);
-                console.log("SIZE OPTIONSS", sizeOptions);
-                
-                const sizeMap = this.parsingController.getAllSizesMap();
-                await Promise.all(sizeOptions.map(async (options) => {
-                    console.log(options);
-                    const poll = await this.client.sendPoll(chatId, options);
-                    if (poll.poll) {
-                        options.forEach(size => {
-                            sizeMap.map((option: { size: string; }, id: number) => {
-                                if (option.size === size) {
-                                    sizeMap[id].pollId = poll.poll?.id;
-                                }
-                            });
-                        });
-                        this.addPoll(msg, poll.poll.id, options, text);
-                    }
-                }));
-                
-                console.log("TTTTT", sizeMap);
-                
-                this.addLink(msg, sizeMap);
+                this.proceedPolls(chatId, msg, text);
             }
         } else {
             if (msg.text === '/start') {
@@ -120,12 +96,33 @@ export default class BotController {
         }
     }
 
+    private async proceedPolls(chatId: number, msg: Message, text: string) {
+        const sizeNames = this.parsingController.getSizesNames();
+        const sizeOptions = this.splitOptionsIntoPolls(sizeNames);
+        console.log("SIZE OPTIONSS", sizeOptions);
+        const sizeMap = this.parsingController.getAllSizesMap();
+        await Promise.all(sizeOptions.map(async (options) => {
+            console.log(options);
+            const poll = await this.client.sendPoll(chatId, options);
+            if (poll.poll) {
+                options.forEach(size => {
+                    sizeMap.map((option: { size: string; }, id: number) => {
+                        if (option.size === size) {
+                            sizeMap[id].pollId = poll.poll?.id;
+                        }
+                    });
+                });
+                this.addPoll(msg, poll.poll.id, options, text);
+            }
+        }));
+        this.addLink(msg, sizeMap);
+    }
+
     protected async getResponse(link: string, chatId: number) {
         const parser = this.parsingController.setUpParser(link);
         if (!parser) {
             this.client.sendNotValidParser(chatId);
         }
-        this.parser = parser;
         try {
             return await this.parsingController.parse(link);
         } catch (error) {
@@ -133,6 +130,20 @@ export default class BotController {
                 this.client.sendNotValidMessage(chatId);
                 console.log(error.name, error.message);
             }
+        }
+    }
+
+    public async parseLink(link: string, chatId: number) {
+        console.log('RRRR THIS', this);
+        
+        const parser = this.parsingController.setUpParser(link);
+        if (!parser) {
+            this.client.sendNotValidParser(chatId);
+        }
+        try {
+            return await this.parsingController.parse(link);
+        } catch (error) {
+            console.log(error);
         }
     }
 

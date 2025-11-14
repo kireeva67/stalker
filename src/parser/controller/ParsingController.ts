@@ -1,3 +1,4 @@
+import { singleton } from "tsyringe";
 import AbstractParser from "../AbstractParser";
 import MangoParser from "../MangoParser";
 import PullAndBearParser from "../PullAndBearParser";
@@ -11,6 +12,7 @@ export enum Parsers {
     STRADIVARIUS = 'www.stradivarius.com'
 }
 
+@singleton()
 export default class ParsingController {
     private parser: AbstractParser;
 

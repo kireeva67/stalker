@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { DataBaseURLIsNotSetError } from '../error/DataBaseURLIsNotSetError';
 import { TTableLinkData, TTablePollData, TTableUserData } from './TableTypes';
+import { singleton } from 'tsyringe';
 
+@singleton()
 export class Database {
     private prisma;
     private databaseUrl: string | undefined;
@@ -20,7 +22,7 @@ export class Database {
 
     public async getAllPolls() {
         return await this.prisma.polls.findMany()
-     }
+    }
 
     public async addUser(data: TTableUserData) {
         const doesUserExsist = await this.doesUserExsist(data.telegram_id);
@@ -36,22 +38,19 @@ export class Database {
         if (links) {
             const isNewLink = links.length > 0;
             console.log("USER HAS LINK?", isNewLink, data);  
-            
-            await Promise.all(links.map(async (link: any) => {
-                const updatedLink = await this.prisma.links.update({
-                    where: {
-                        id: link.id
-                    },
-                    data: { is_active: false }
-                });
-                console.log('LINK IS NOT ACTIVE ANYMORE', updatedLink);
-            }));
+            await this.prisma.links.updateMany({
+                where: {
+                  id: { in: links.map((link: any) => link.id) }
+                },
+                data: { is_active: false }
+            });
 
             const link = await this.prisma.links.create({
                 data: {
                     url: data.url,
                     available_params: data.available_params,
                     is_active: true,
+                    chat_id: data.chat_id,
                     user: {
                     connect: { telegram_id: userId }
                     },
@@ -141,5 +140,17 @@ export class Database {
             },
         });
         return user.length > 0;
+    }
+
+    public async checkActiveLinks() {
+
+    }
+
+    public async getLinksToCheck() {
+        return await this.prisma.links.findMany({
+            where: {
+                is_active: true 
+            }
+        });
     }
 }

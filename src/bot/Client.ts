@@ -1,16 +1,31 @@
 import Bot from 'node-telegram-bot-api';
 import EventEmitter from "events";
 import { Message, TPollAnswer } from './Types';
+import { singleton } from 'tsyringe';
+import { BotTokenNotFound } from '../error/BotTokenNotFoundError';
+import { isMainThread } from 'worker_threads';
 
+@singleton()
 export default class Client extends EventEmitter {
+    protected token: string | undefined;;
     public bot;
     private maxOptions = 10;
     private minOptions = 2;
 
-    constructor(token: string) {
+    constructor() {
         super();
-        this.bot = new Bot(token, {polling: true});
-        this.attachListeners(); 
+        console.log('RRR BOT INIT', this.bot);
+        this.token = process.env.TELEGRAM_BOT_TOKEN;    
+        if (!this.token) {
+            throw BotTokenNotFound;
+        }
+        if (!this.bot) {
+            const shouldPoll = isMainThread;
+            this.bot = new Bot(this.token, {polling: shouldPoll});
+            if (shouldPoll) {
+                this.attachListeners(); 
+            }
+        }
     }
 
     private attachListeners() {

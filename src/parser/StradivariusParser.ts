@@ -1,6 +1,4 @@
 import AbstractParser from "./AbstractParser";
-import jsdom from "jsdom";
-const { JSDOM } = jsdom;
 
 export default class StradivariusParser extends AbstractParser {
   private colorId: string | null;
