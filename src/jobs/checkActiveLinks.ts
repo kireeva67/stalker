@@ -1,8 +1,7 @@
-import "reflect-metadata"; 
+import "reflect-metadata";
 import { container } from "tsyringe";
 import { Database } from "../database/Database";
-import ParsingController from "../parser/controller/ParsingController";
-import Client from "../bot/Client";
+import BotController from "../bot/controller/BotController";
 import { isMainThread, parentPort } from 'worker_threads';
 
 console.log('checkActiveLinks.ts file loaded');
@@ -11,32 +10,22 @@ async function checkActiveLinks() {
     console.log('checkActiveLinks function called!');
 
     try {
-        const parsingController = container.resolve(ParsingController);
+        const botController = container.resolve(BotController);
         const database = container.resolve(Database);
-        const client = container.resolve(Client);
 
         const linksToCheck = await database.getLinksToCheck();
         console.log('Links to check:', linksToCheck.length);
-        
+
         if (linksToCheck.length === 0) {
             console.log('No links to check');
             return;
         }
-        
+
         const chunks = splitToChunks(linksToCheck, 5);
         await Promise.all(chunks.map(async chunk => {
             await Promise.all(chunk.map(async link => {
                 try {
-                    const parser = parsingController.setUpParser(link.url);
-                    if (!parser) {
-                        client.sendNotValidParser(link.chat_id);
-                        return;
-                    }
-                    
-                    const response = await parsingController.parse(link.url);
-                    console.log('RESPONSE for', link.url);
-                
-                    
+                    await botController.checkIfSelectedParamsAvailable(link);
                 } catch (error) {
                     console.error(`Error parsing link ${link.url}:`, error);
                 }
@@ -46,7 +35,7 @@ async function checkActiveLinks() {
         parentPort?.postMessage('done');
     } catch (error) {
         console.error("Error in Bree Job:", error);
-        throw error; 
+        throw error;
     }
 }
 

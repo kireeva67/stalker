@@ -22,3 +22,6 @@ build/
 
 # Environment files
 .env
+
+# Local HTML check files
+htmlToCheck

@@ -1,65 +1,38 @@
 import { singleton } from "tsyringe";
 import AbstractParser from "../AbstractParser";
 import MangoParser from "../MangoParser";
-import PullAndBearParser from "../PullAndBearParser";
-import StradivariusParser from "../StradivariusParser";
+import { writeFileSync } from "node:fs";
 
 export enum Parsers {
     MANGO = 'shop.mango.com',
-    PULLANDBEAR = 'www.pullandbear.com',
-    ZARA = 'www.zara.com',
-    BERSHKA = 'www.bershka.com',
-    STRADIVARIUS = 'www.stradivarius.com'
 }
 
 @singleton()
 export default class ParsingController {
-    private parser: AbstractParser;
 
-    public setUpParser(link: string) {
+    protected getParser(link: string) {
         const url = new URL(link);
         console.log(url);
         const hostName = url.hostname;
-        this.parser = this.getParser(hostName);
-        return this.parser;
+        return this.createParser(hostName);
     }
 
     public async parse(link: string) {
-        const dataLink = await this.parser.getDataLink(link);
-        const data = await this.parser.getData(dataLink);
+        const parser = this.getParser(link);
+        const dataLink = await parser.getDataLink(link);
+        const data = await parser.getData(dataLink);
+        const sizesMap = parser.getAllSizesMap(data);
         console.log('DATA', dataLink);
-        // writeFileSync(`new22.html`, data);
-        return data;   
+        writeFileSync(`htmlToCheck.html`, data);
+        return { data, sizesMap };
     }
 
-    public getColorNames() {
-        this.parser.getAllColorsMap();
-       return this.parser.getAllColorNames();
-    }
-
-    public getSizesNames() {
-        this.parser.getAllSizesMap();
-       return this.parser.getAllSizesNames();
-    }
-
-    public getParser(hostName: string) {
+    public createParser(hostName: string) {
         switch (hostName) {
             case Parsers.MANGO:
                 return new MangoParser();
-            case Parsers.ZARA:
-                return new MangoParser();
-            case Parsers.PULLANDBEAR: 
-                return new PullAndBearParser();
-            case Parsers.BERSHKA:
-                return new MangoParser();
-            case Parsers.STRADIVARIUS:
-                return new StradivariusParser();
             default:
                 return new AbstractParser();
         }
-    }
-
-    public getAllSizesMap() {
-        return this.parser.getAllSizesMap();
     }
 }
