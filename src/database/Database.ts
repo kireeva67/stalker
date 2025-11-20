@@ -104,16 +104,17 @@ export class Database {
             console.warn(`[addChoosenOptions] No active link found for user ${userId} and URL ${url}`);
             return;
         }
-        const updatedLink = await this.updateLinkData(link.id, { selected_params: options });
+        const updatedLink = await this.updateLinkData(link.id, { selected_params: options }, link.user_id);
 
         console.log(`[addChoosenOptions] Successfully updated link  with ${options.length} selected options`);
         return updatedLink;
     }
 
-    public async updateLinkData(linkId: number, data: any) {
+    public async updateLinkData(linkId: number, data: any, userId: number) {
         return await this.prisma.links.update({
             where: {
-                id: linkId
+                id: linkId,
+                user_id: userId
             },
             data: data
         });

@@ -214,13 +214,13 @@ export default class BotController {
             updateData.selected_params = stillUnavailable;
         }
 
-        // if ((nowAvailable.length === selectedParams.length && stillUnavailable.length === 0 && selectedParams.length > 0)) {
-        //     console.log(`[checkIfSelectedParamsAvailable] All selected sizes are now available, deactivating link`, link.chat_id);
-        //     await this.client.sendDeactivateLink(link.chat_id, link.url);
-        //     updateData.is_active = false;
-        //     updateData.selected_params = [];
-        // }
-        await this.database.updateLinkData(dbLink.id, updateData);
+        if ((nowAvailable.length === selectedParams.length && stillUnavailable.length === 0 && selectedParams.length > 0)) {
+            console.log(`[checkIfSelectedParamsAvailable] All selected sizes are now available, deactivating link`, link.chat_id);
+            await this.client.sendDeactivateLink(link.chat_id, link.url);
+            updateData.is_active = false;
+            updateData.selected_params = [];
+        }
+        await this.database.updateLinkData(dbLink.id, updateData, dbLink.user_id);
     }
 
     protected getUpdatedSizesData(selectedParams: string[], sizesMap: TSizeOption[]) {
