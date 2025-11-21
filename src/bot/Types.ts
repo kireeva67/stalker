@@ -9,20 +9,20 @@ export type TUserAndLangCode = {
 } & TUser
 
 export type TUser = {
-    id: number;                  
-    is_bot: boolean;             
-    first_name: string;        
-    last_name?: string;           
-    username?: string;   
+    id: number;
+    is_bot: boolean;
+    first_name: string;
+    last_name?: string;
+    username?: string;
 }
 
 export type TChat = {
-    id: number;                   
-    type: string;                
-    title?: string;           
-    username?: string;       
-    first_name?: string;     
-    last_name?: string; 
+    id: number;
+    type: string;
+    title?: string;
+    username?: string;
+    first_name?: string;
+    last_name?: string;
 }
 
 export type TPullMessage = {
@@ -33,32 +33,33 @@ export type TPullMessage = {
 }
 
 export type TPoll = {
-    id: string;                   
-    question: string;             
+    id: string;
+    question: string;
     options: Option[];
-    total_voter_count: number;   
-    is_closed: boolean;         
-    is_anonymous: boolean;        
-    type: string;                
+    total_voter_count: number;
+    is_closed: boolean;
+    is_anonymous: boolean;
+    type: string;
     allows_multiple_answers: boolean;
 }
 
-export type TSizeOption = { 
+export type TSizeOption = {
     size: string,
     available: boolean,
-    pollId?: string
- };
+    pollId?: string,
+    lastUnits?: boolean,
+};
 
 export type Message = {
-    message_id: number;               
-    date: number;                     
+    message_id: number;
+    date: number;
     chat: TChat;
     from?: TUser;
     poll?: TPoll;
-    text?: string;                
+    text?: string;
 };
 
-type Option = {                   
-    text: string;            
-    voter_count: number;    
+type Option = {
+    text: string;
+    voter_count: number;
 }

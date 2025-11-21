@@ -76,7 +76,7 @@ export default class Client extends EventEmitter {
 
     public async sendItemAvailable(chatId: number, sizes: string[]) {
         try {
-            await this.bot.sendMessage(chatId, `I will not stalkering ${sizes} - target in sight. Warning! If you see this item as una`);
+            await this.bot.sendMessage(chatId, `I will not stalkering ${sizes} - target in sight.`);
             console.log(`[Client] sendItemAvailable: message sent to ${chatId}`);
         } catch (err) {
             console.error('[Client] sendItemAvailable error:', err);

@@ -24,7 +24,7 @@ export default class AbstractParser {
         }
     }
 
-    public getAllSizesMap(data: any): TSizeOption[] {
+    public getAllSizesMap(data: any, link: string): TSizeOption[] {
         return [];
     }
 }

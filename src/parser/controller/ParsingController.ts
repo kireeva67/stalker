@@ -21,8 +21,8 @@ export default class ParsingController {
         const parser = this.getParser(link);
         const dataLink = await parser.getDataLink(link);
         const data = await parser.getData(dataLink);
-        const sizesMap = parser.getAllSizesMap(data);
-        console.log('DATA', dataLink);
+        const sizesMap = parser.getAllSizesMap(data, link);
+        console.log('DATA', dataLink, sizesMap);
         writeFileSync(`htmlToCheck.html`, data);
         return { data, sizesMap };
     }
