@@ -24,4 +24,4 @@ build/
 .env
 
 # Local HTML check files
-htmlToCheck
+htmlToCheck*
