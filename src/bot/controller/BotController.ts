@@ -204,8 +204,8 @@ export default class BotController {
         const sizesMap = response.sizesMap;
         log("SIZESS MAP777", sizesMap);
         console.log(`[checkIfSelectedParamsAvailable] Parsed ${link.url}: ${sizesMap.length} sizes found`);
-        const { nowAvailable, stillUnavailable } = this.getUpdatedSizesData(selectedParams, sizesMap);
-        log(`[checkIfSelectedParamsAvailable] For link ${link.url}, now available: ${nowAvailable.join(', ')}, still unavailable: ${stillUnavailable.join(', ')}`);
+        const { nowAvailable, stillUnavailable, notFound } = this.getUpdatedSizesData(selectedParams, sizesMap);
+        log(`[checkIfSelectedParamsAvailable] For link ${link.url}, now available: ${nowAvailable.join(', ')}, still unavailable: ${stillUnavailable.join(', ')}, not found: ${notFound.join(', ')}`);
         const updateData: any = { available_params: sizesMap };
 
         if (nowAvailable.length > 0) {
@@ -214,7 +214,10 @@ export default class BotController {
             updateData.selected_params = stillUnavailable;
         }
 
-        if ((nowAvailable.length === selectedParams.length && stillUnavailable.length === 0 && selectedParams.length > 0)) {
+        const allSizesFound = (nowAvailable.length + stillUnavailable.length) === selectedParams.length;
+        const allSizesAvailable = nowAvailable.length === selectedParams.length && stillUnavailable.length === 0;
+        
+        if (allSizesFound && allSizesAvailable && selectedParams.length > 0) {
             console.log(`[checkIfSelectedParamsAvailable] All selected sizes are now available, deactivating link`, link.chat_id);
             await this.client.sendDeactivateLink(link.chat_id, link.url);
             updateData.is_active = false;
@@ -226,6 +229,8 @@ export default class BotController {
     protected getUpdatedSizesData(selectedParams: string[], sizesMap: TSizeOption[]) {
         const nowAvailable: string[] = [];
         const stillUnavailable: string[] = [];
+        const notFound: string[] = [];
+        
         selectedParams.forEach((selectedSize: string) => {
             const currentSize = sizesMap.find(
                 (size: TSizeOption) => this.normilizeSize(size.size) === this.normilizeSize(selectedSize)
@@ -238,10 +243,12 @@ export default class BotController {
                     stillUnavailable.push(selectedSize);
                 }
             } else {
-                console.warn(`[checkIfSelectedParamsAvailable] Size ${selectedSize} not found in current product data`);
+                console.warn(`[checkIfSelectedParamsAvailable] Size ${selectedSize} not found in current product data - will keep monitoring`);
+                stillUnavailable.push(selectedSize);
+                notFound.push(selectedSize);
             }
         });
-        return { nowAvailable, stillUnavailable };
+        return { nowAvailable, stillUnavailable, notFound };
     }
 
     protected normilizeSize(size: string) {

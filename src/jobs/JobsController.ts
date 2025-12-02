@@ -1,7 +1,7 @@
-import process from 'node:process';
 import * as path from 'node:path';
 import 'ts-node/register';
 import Bree from 'bree';
+import { SHARE_ENV } from 'node:worker_threads';
 
 
 export default class JobsController {
@@ -16,15 +16,16 @@ export default class JobsController {
   protected async init() {
     this.bree = new Bree({
       root: path.join(__dirname, '../jobs'),
-      defaultExtension: process.env.TS_NODE ? 'ts' : 'js',
       acceptedExtensions: ['.ts', '.js'],
       jobs: [
         {
           name: 'checkActiveLinks',
           interval: '30s',
-          path: path.join(__dirname, "checkActiveLinks.ts"),
           timeout: 0,
-          closeWorkerAfterMs: 5000
+          closeWorkerAfterMs: 5000,
+          worker: {
+            env: SHARE_ENV,
+          },
         }
       ]
     });
