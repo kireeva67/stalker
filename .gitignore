@@ -25,3 +25,9 @@ build/
 
 # Local HTML check files
 htmlToCheck*
+
+# Database files (Prisma SQLite)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
