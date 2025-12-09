@@ -6,7 +6,15 @@
   "scripts": {
     "build": "tsc",
     "start": "NODE_ENV=production node dist/index.js",
-    "dev": "TS_NODE=true NODE_OPTIONS=\"-r ts-node/register\" node src/index.ts"
+    "dev": "TS_NODE=true NODE_OPTIONS=\"-r ts-node/register\" node src/index.ts",
+    "docker:build": "docker run --rm -v $PWD:/app -w /app stalker:dev npm run build",
+    "docker:dev": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npm run dev",
+    "docker:start": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npm start",
+    "docker:prisma:generate": "docker run --rm -v $PWD:/app -w /app stalker:dev npx prisma generate",
+    "docker:prisma:migrate": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npx prisma migrate dev",
+    "docker:prisma:deploy": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npx prisma migrate deploy",
+    "docker:install": "docker run --rm -v $PWD:/app -w /app stalker:dev npm install",
+    "docker:shell": "docker run --rm -it -v $PWD:/app -w /app --env-file .env stalker:dev sh"
   },
   "keywords": [],
   "author": "",
