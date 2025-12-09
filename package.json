@@ -1,0 +1,43 @@
+{
+  "name": "stalker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "NODE_ENV=production node dist/index.js",
+    "dev": "TS_NODE=true NODE_OPTIONS=\"-r ts-node/register\" node src/index.ts",
+    "docker:build": "docker run --rm -v $PWD:/app -w /app stalker:dev npm run build",
+    "docker:dev": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npm run dev",
+    "docker:start": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npm start",
+    "docker:prisma:generate": "docker run --rm -v $PWD:/app -w /app stalker:dev npx prisma generate",
+    "docker:prisma:migrate": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npx prisma migrate dev",
+    "docker:prisma:deploy": "docker run --rm -v $PWD:/app -w /app --env-file .env stalker:dev npx prisma migrate deploy",
+    "docker:install": "docker run --rm -v $PWD:/app -w /app stalker:dev npm install",
+    "docker:shell": "docker run --rm -it -v $PWD:/app -w /app --env-file .env stalker:dev sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.10.7",
+    "@types/node-telegram-bot-api": "^0.64.7",
+    "globals": "^15.14.0",
+    "prisma": "^6.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "axios": "^1.7.9",
+    "bree": "^9.2.4",
+    "dotenv": "^16.4.7",
+    "jsdom": "^26.0.0",
+    "node-telegram-bot-api": "^0.66.0",
+    "reflect-metadata": "^0.2.2",
+    "sqlite": "^5.1.1",
+    "tsyringe": "^4.8.0"
+  }
+}
